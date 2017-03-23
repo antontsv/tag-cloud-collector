@@ -1,3 +1,8 @@
+/*
+ Package provides simple interface to collect
+ popular items (words, sentenses, ideas) and ask users to rank them
+ from the most interesting to the least interesting
+*/
 package main
 
 import (
@@ -16,12 +21,15 @@ import (
 	"fmt"
 )
 
-const targetIndex = "brownbag"
-const targetDoc = "talks"
+// ElasticSearch index name to store the entries
+const targetIndex = "populatity"
+
+// ElasticSearch type name to be used under selected index
+const targetDoc = "votes"
 const maxTopicsToQuery = 50
 
 func exit(message string) {
-	fmt.Println("We have a problem:")
+	fmt.Println("We have a proble:")
 	fmt.Println(message)
 	os.Exit(1)
 }
