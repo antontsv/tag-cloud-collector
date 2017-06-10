@@ -1,7 +1,7 @@
 /*
- Package provides simple interface to collect
- popular items (words, sentenses, ideas) and ask users to rank them
- from the most interesting to the least interesting
+Package provides simple interface to collect
+popular items (words, sentenses, ideas) and ask users to rank them
+from the most interesting to the least interesting
 */
 package main
 
@@ -29,8 +29,7 @@ const targetDoc = "votes"
 const maxTopicsToQuery = 50
 
 func exit(message string) {
-	fmt.Println("We have a proble:")
-	fmt.Println(message)
+	fmt.Printf("Critical error: %s\nExiting now...\n", message)
 	os.Exit(1)
 }
 
