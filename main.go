@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/sha256"
+	"log"
 	"math/rand"
 	"os"
 	"os/user"
@@ -27,11 +28,6 @@ const targetIndex = "populatity"
 // ElasticSearch type name to be used under selected index
 const targetDoc = "votes"
 const maxTopicsToQuery = 50
-
-func exit(message string) {
-	fmt.Printf("Critical error: %s\nExiting now...\n", message)
-	os.Exit(1)
-}
 
 type TalkVote struct {
 	User   string `json:"user"`
@@ -61,7 +57,7 @@ func NewTermAggregation(name string, value interface{}) *TermAggregation {
 func AddVote(client *elastic.Client, topic string, points int) {
 	usr, err := user.Current()
 	if err != nil {
-		exit("Sorry, cannot detect your username. Bye!")
+		log.Fatal("Sorry, cannot detect your username. Bye!")
 	}
 	vote := TalkVote{User: usr.Username, Title: topic, Points: points}
 	h := sha256.New()
@@ -73,7 +69,7 @@ func AddVote(client *elastic.Client, topic string, points int) {
 		BodyJson(vote).
 		Do(context.Background())
 	if err != nil {
-		exit("Was unable to add new topic")
+		log.Fatal("Was unable to add new topic")
 	}
 }
 
@@ -90,17 +86,17 @@ func main() {
 		elastic.SetURL("http://10.100.100.101:9200"),
 		elastic.SetSniff(false))
 	if err != nil {
-		exit("No connection to Elastic search")
+		log.Fatal("No connection to Elastic search")
 	}
 	exists, err := client.IndexExists(targetIndex).Do(ctx)
 	if err != nil {
-		exit("Cannot query Elastic search")
+		log.Fatal("Cannot query Elastic search")
 	}
 
 	if !exists {
 		_, err = client.CreateIndex(targetIndex).Do(ctx)
 		if err != nil {
-			exit("Cannot create index in Elastic search")
+			log.Fatal("Cannot create index in Elastic search")
 		}
 	}
 
@@ -114,7 +110,7 @@ func main() {
 		Pretty(true).
 		Do(ctx)
 	if err != nil {
-		exit("Unable to get list of existing topics")
+		log.Fatal("Unable to get list of existing topics")
 	}
 
 	aggResult, ok := searchResult.Aggregations.Terms(aggName)
@@ -169,7 +165,7 @@ func main() {
 			Pretty(true).
 			Do(ctx)
 		if err != nil {
-			exit("Unable to get list of existing topics")
+			log.Fatal("Unable to get list of existing topics")
 		}
 
 		aggResult, ok := searchResult.Aggregations.Terms(aggName)
