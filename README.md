@@ -7,4 +7,4 @@ Examples for the topics would be:
 * todo list priorities
 * food choices
 
-Collected information is written to Elastic Search and can be later on visualised in Kibana as a tag cloud, or a table. 
+Collected information is written to Elastic Search and can be later on visualised in Kibana as a [tag cloud](https://www.elastic.co/guide/en/kibana/current/tagcloud-chart.html), or a table. 
