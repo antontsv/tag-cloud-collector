@@ -30,18 +30,22 @@ const targetIndex = "populatity"
 const targetDoc = "votes"
 const maxTopicsToQuery = 50
 
-type TalkVote struct {
+// Vote represents a document stored in elastic search index
+type Vote struct {
 	User   string `json:"user"`
 	Title  string `json:"title"`
 	Points int    `json:"interestPoints"`
 }
 
+// TermAggregation is used to prepare elastic search aggregation query
 type TermAggregation struct {
 	elastic.Aggregation
 	name  string
 	value interface{}
 }
 
+// Source returns a JSON-serializable aggregation that is a fragment
+// of the request sent to Elasticsearch.
 func (q *TermAggregation) Source() (interface{}, error) {
 	source := make(map[string]interface{})
 	tq := make(map[string]interface{})
@@ -51,16 +55,16 @@ func (q *TermAggregation) Source() (interface{}, error) {
 	return source, nil
 }
 
-func NewTermAggregation(name string, value interface{}) *TermAggregation {
+func newTermAggregation(name string, value interface{}) *TermAggregation {
 	return &TermAggregation{name: name, value: value}
 }
 
-func AddVote(client *elastic.Client, topic string, points int) {
+func addVote(client *elastic.Client, topic string, points int) {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal("Sorry, cannot detect your username. Bye!")
 	}
-	vote := TalkVote{User: usr.Username, Title: topic, Points: points}
+	vote := Vote{User: usr.Username, Title: topic, Points: points}
 	h := sha256.New()
 	h.Write([]byte(topic + usr.Username))
 	_, err = client.Index().
@@ -109,7 +113,7 @@ func main() {
 	}
 
 	aggName := "topics"
-	termAggregation := NewTermAggregation("field", "title.keyword")
+	termAggregation := newTermAggregation("field", "title.keyword")
 	searchResult, err := client.Search().
 		Index(targetIndex).
 		Type(targetDoc).
@@ -150,7 +154,7 @@ func main() {
 				text, _ = reader.ReadString('\n')
 				if strings.HasPrefix(strings.ToLower(text), "y") {
 					fmt.Println("Ok, I will create it")
-					AddVote(client, topic, 5)
+					addVote(client, topic, 5)
 				} else {
 					fmt.Println("Poof! Erased. We will pretend that you have never suggested it :)")
 				}
@@ -164,7 +168,7 @@ func main() {
 	fmt.Print(">> ")
 	text, _ := reader.ReadString('\n')
 	if !strings.HasPrefix(strings.ToLower(text), "n") {
-		termAggregation = NewTermAggregation("field", "title.keyword")
+		termAggregation = newTermAggregation("field", "title.keyword")
 		searchResult, err = client.Search().
 			Index(targetIndex).
 			Type(targetDoc).
@@ -207,12 +211,12 @@ func main() {
 						fmt.Println("Ok, lets choose another one")
 						continue
 					}
-					AddVote(client, leftToRank[selectedNumber-1], count-i)
+					addVote(client, leftToRank[selectedNumber-1], count-i)
 					leftToRank = remove(leftToRank, selectedNumber-1)
 				}
 				i++
 				if len(leftToRank) < 2 {
-					AddVote(client, leftToRank[0], count-i-1)
+					addVote(client, leftToRank[0], count-i-1)
 					fmt.Println("Thanks for ranking all of the topics. The results are in!")
 					break
 				}
