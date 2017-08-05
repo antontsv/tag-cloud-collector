@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/sha256"
+	"flag"
 	"log"
 	"math/rand"
 	"os"
@@ -79,14 +80,21 @@ func remove(s []string, i int) []string {
 }
 
 func main() {
+	elasticURL := flag.String("elasticURL", "http://10.100.100.101:9200", "Elastic search connect URL")
+	verbose := flag.Bool("verbose", false, "Enables extra output from Elastic search")
+	flag.Parse()
 
 	ctx := context.Background()
-	// for trace loggin use: elastic.SetTraceLog(log.New(os.Stdout, "", 0))
-	client, err := elastic.NewClient(
-		elastic.SetURL("http://10.100.100.101:9200"),
-		elastic.SetSniff(false))
+	var options = []elastic.ClientOptionFunc{
+		elastic.SetURL(*elasticURL),
+		elastic.SetSniff(false),
+	}
+	if *verbose {
+		options = append(options, elastic.SetTraceLog(log.New(os.Stdout, "ES:", 0)))
+	}
+	client, err := elastic.NewClient(options...)
 	if err != nil {
-		log.Fatal("No connection to Elastic search")
+		log.Fatalf("Unable to connect to Elastic search at %s", *elasticURL)
 	}
 	exists, err := client.IndexExists(targetIndex).Do(ctx)
 	if err != nil {
